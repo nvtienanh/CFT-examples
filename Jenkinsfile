@@ -16,7 +16,7 @@ pipeline {
     }
 
     environment {
-        GIT_URL    = 'ssh://git@github.com:nvtienanh'
+        GIT_URL    = 'https://github.com/nvtienanh'
         GIT_REPO   = 'CFT-examples.git'
         GIT_CREDS  = 'github_nvtienanh'
         AWS_REGION = 'ap-southeast-1'
@@ -28,9 +28,18 @@ pipeline {
     }
 
     stages {
-        stage('build') {
+        stage('Checkout') {
             steps {
-                sh 'python3 --version'
+                checkout( [$class: 'GitSCM',
+                    branches: [[name: "*/${params.BRANCH_NAME}"]],
+                    clearWorkspace: true,
+                    clean: true,
+                    userRemoteConfigs: [
+                        [
+                            credentialsId: "${GIT_CREDS}",
+                            url: "${GIT_URL}/${GIT_REPO}"]
+                        ]
+                ])
             }
         }
     }
