@@ -42,5 +42,37 @@ pipeline {
                 ])
             }
         }
+
+        stage('STEP 0: Approve Deployment') {
+            when {
+                beforeAgent true
+                expression { params.DEPLOY_ENV == 'prod' }
+            }
+            steps {
+                timeout(time:1, unit:'DAYS') {
+                    input message:'Approve deployment?'
+                }
+                echo 'Continue'
+            }
+        }
+
+        stage("STEP 1: Get ACCOUNT_ID for each environment") {
+           when {
+             expression {
+               currentBuild.result == null || currentBuild.result == 'SUCCESS'
+             }
+           }
+           steps {
+               script {
+                   if ("${params.DEPLOY_ENV}" == 'dev') {
+                       ACCOUNT_ID = env.ACCOUNT_ID_DEV
+                   } else if ("${params.DEPLOY_ENV}" == 'staging') {
+                       ACCOUNT_ID = env.ACCOUNT_ID_STAGING
+                   } else if ("${params.DEPLOY_ENV}" == 'prod') {
+                       ACCOUNT_ID = env.ACCOUNT_ID_PROD
+                   }
+               }
+           }
+        }
     }
 }
