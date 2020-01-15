@@ -1,84 +1,10 @@
-#!/usr/bin/env groovy
-
 pipeline {
-    // agent { label 'alpine-maven-l-latest-fargate' }
-    // agent any
-
-    options {
-      skipStagesAfterUnstable()
-      disableConcurrentBuilds()
-      timestamps()
-      buildDiscarder(logRotator(numToKeepStr: '15', artifactNumToKeepStr: '15'))
-    }
-
-    parameters {
-      string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'Define branch name')
-      choice(name: 'DEPLOY_ENV', choices: ['dev', 'staging', 'prod'], description: 'Define environment name')
-      // string(name: 'SOURCE_IP', defaultValue: '54.76.152.253/32,193.56.36.38/32', description: 'Define source IP addresses from Mulesoft')
-    }
-
-    environment {
-        GIT_URL    = 'ssh://git@github.com:nvtienanh'
-        GIT_REPO   = 'CFT-examples.git'
-        GIT_CREDS  = 'github_nvtienanh'
-        AWS_REGION = 'ap-southeast-1'
-        ACCOUNT_ID_DEV      = '856190911244'
-        ACCOUNT_ID_STAGING  = '856190911244'
-        ACCOUNT_ID_PROD     = '856190911244'
-        DEPLOYER_ROLE       = 'nvta/deployment/role-nvta-deployer'
-    }
-
+    // agent { docker { image 'python:3.5.1' } }
     stages {
-        stage('Checkout') {
+        stage('build') {
             steps {
-                checkout( [$class: 'GitSCM',
-                    branches: [[name: "*/${params.BRANCH_NAME}"]],
-                    clearWorkspace: true,
-                    clean: true,
-                    userRemoteConfigs: [
-                        [
-                            credentialsId: "${GIT_CREDS}",
-                            url: "${GIT_URL}/${GIT_REPO}"]
-                        ]
-                ])
+                sh 'python --version'
             }
-        }
-
-        stage('STEP 0: Approve Deployment') {
-            when {
-                beforeAgent true
-                expression { params.DEPLOY_ENV == 'prod' }
-            }
-            steps {
-                timeout(time:1, unit:'DAYS') {
-                    input message:'Approve deployment?'
-                }
-                echo 'Continue'
-            }
-        }
-
-        stage("STEP 1: Get ACCOUNT_ID for each environment") {
-           when {
-             expression {
-               currentBuild.result == null || currentBuild.result == 'SUCCESS'
-             }
-           }
-           steps {
-               script {
-                   if ("${params.DEPLOY_ENV}" == 'dev') {
-                       ACCOUNT_ID = env.ACCOUNT_ID_DEV
-                   } else if ("${params.DEPLOY_ENV}" == 'staging') {
-                       ACCOUNT_ID = env.ACCOUNT_ID_STAGING
-                   } else if ("${params.DEPLOY_ENV}" == 'prod') {
-                       ACCOUNT_ID = env.ACCOUNT_ID_PROD
-                   }
-               }
-           }
-        }
-        
-    post {
-        always {
-            cleanWs()
         }
     }
 }
