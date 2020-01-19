@@ -82,7 +82,7 @@ pipeline {
              }
            }
            steps {
-               withAWS(region: "${AWS_REGION}", credentials:'aws_nvtienanh') {
+               withAWS(region: "${AWS_REGION}") {
                    sh """
                    set +x
                    TEMPLATE_BODY="--template-body file://CFTs/base-resources.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
