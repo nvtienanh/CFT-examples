@@ -1,3 +1,5 @@
-*.json
+base-resources-global.json
+iam-deployment-global.json
+iam-users-nvta.json
 *.sh
 *.properties

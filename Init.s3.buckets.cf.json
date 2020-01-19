@@ -1,0 +1,292 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudFormation for deploying s3 bucket to where the lambda functions (zipped), cfn templates and data",
+    "Metadata": {},
+    "Parameters": {
+        "ApplicationCode": {
+            "Type": "String",
+            "Default": "nvta"
+        },
+        "StageName": {
+            "Type": "String",
+            "Default": "dev"
+        },
+        "UsageConfig": {
+            "Type": "String",
+            "Default": "config-default"
+        },
+        "S3AccessLog": {
+            "Type": "String",
+            "Default": "access-log-default"
+        },
+        "ExpirationDays": {
+            "Type": "Number",
+            "Default": "7"
+        }
+    },
+    "Mappings": {},
+    "Conditions": {},
+    "Resources": {
+        "S3BucketAccessLog": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "BucketName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "s3",
+                            "-",
+                            "app",
+                            "-",
+                            {
+                                "Ref": "ApplicationCode"
+                            },
+                            "-",
+                            {
+                                "Ref": "StageName"
+                            },
+                            "-",
+                            {
+                                "Ref": "S3AccessLog"
+                            },
+                            "-",
+                            {
+                                "Ref": "AWS::Region"
+                            }
+                        ]
+                    ]
+                },
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": true,
+                    "IgnorePublicAcls": true,
+                    "BlockPublicPolicy": true,
+                    "RestrictPublicBuckets": true
+                },
+                "Tags": [
+                  {
+                    "Key": "airbus:application-code",
+                    "Value": {
+                      "Ref": "ApplicationCode"
+                    }
+                  },
+                  {
+                    "Key": "airbus:application-billing",
+                    "Value": {
+                      "Ref": "ApplicationCode"
+                    }
+                  }
+                ],
+                "AccessControl": "LogDeliveryWrite",
+                "BucketEncryption": {
+                  "ServerSideEncryptionConfiguration": [
+                    {
+                      "ServerSideEncryptionByDefault": {
+                        "SSEAlgorithm": "aws:kms",
+                        "KMSMasterKeyID": "aws/s3"
+                      }
+                    }
+                  ]
+                }
+            }
+        },
+        "S3BucketAccessLogPolicy" : {
+        "Type" : "AWS::S3::BucketPolicy",
+        "Properties" : {
+          "Bucket" : {"Ref" : "S3BucketAccessLog"},
+          "PolicyDocument": {
+            "Statement":[
+              {
+          	     "Action":["s3:Get*"],
+          	     "Effect":"Allow",
+          	     "Resource": {
+                   "Fn::Join" : [
+                      "",
+                      [
+                        "arn:aws:s3:::",
+                        { "Ref" : "S3BucketAccessLog" },
+                        "/*"
+                      ]
+                    ]
+                  },
+                  "Principal": {
+                    "AWS": {
+                      "Ref": "AWS::AccountId"
+                    }
+                  }
+              },
+              {
+          	     "Action":"*",
+          	     "Effect":"Deny",
+          	     "Resource": {
+                   "Fn::Join" : [
+                      "",
+                      [
+                        "arn:aws:s3:::",
+                        { "Ref" : "S3BucketAccessLog" },
+                        "/*"
+                      ]
+                    ]
+                  },
+                  "Principal": "*",
+                  "Condition": {
+                    "Bool": {
+                      "aws:SecureTransport": "false"
+                    }
+                  }
+              }
+            ]
+          }
+         }
+        },
+        "S3BucketConfig": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "BucketName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "s3",
+                            "-",
+                            "app",
+                            "-",
+                            {
+                                "Ref": "ApplicationCode"
+                            },
+                            "-",
+                            {
+                                "Ref": "StageName"
+                            },
+                            "-",
+                            {
+                                "Ref": "UsageConfig"
+                            },
+                            "-",
+                            {
+                                "Ref": "AWS::Region"
+                            }
+                        ]
+                    ]
+                },
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": true,
+                    "IgnorePublicAcls": true,
+                    "BlockPublicPolicy": true,
+                    "RestrictPublicBuckets": true
+                },
+                "Tags": [
+        					{
+        						"Key": "airbus:application-code",
+        						"Value": {
+        							"Ref": "ApplicationCode"
+        						}
+        					},
+        					{
+        						"Key": "airbus:application-billing",
+        						"Value": {
+        							"Ref": "ApplicationCode"
+        						}
+        					}
+        				],
+        				"BucketEncryption": {
+        					"ServerSideEncryptionConfiguration": [
+        						{
+        							"ServerSideEncryptionByDefault": {
+        								"SSEAlgorithm": "aws:kms",
+        								"KMSMasterKeyID": "aws/s3"
+        							}
+        						}
+        					]
+        				},
+                "LoggingConfiguration" : {
+                  "DestinationBucketName" : {
+                    "Ref": "S3BucketAccessLog"
+                  },
+                  "LogFilePrefix" : {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "s3",
+                            "-",
+                            "app",
+                            "-",
+                            {
+                                "Ref": "ApplicationCode"
+                            },
+                            "-",
+                            {
+                                "Ref": "StageName"
+                            },
+                            "-",
+                            {
+                                "Ref": "UsageConfig"
+                            },
+                            "-",
+                            {
+                                "Ref": "AWS::Region"
+                            }
+                        ]
+                    ]
+                  }
+                }
+            }
+        },
+        "S3BucketConfigPolicy" : {
+        "Type" : "AWS::S3::BucketPolicy",
+        "Properties" : {
+          "Bucket" : {"Ref" : "S3BucketConfig"},
+          "PolicyDocument": {
+            "Statement":[
+              {
+                 "Action":["s3:Get*"],
+                 "Effect":"Allow",
+                 "Resource": {
+                   "Fn::Join" : [
+                      "",
+                      [
+                        "arn:aws:s3:::",
+                        { "Ref" : "S3BucketConfig" },
+                        "/*"
+                      ]
+                    ]
+                  },
+                  "Principal": {
+                    "AWS": {
+                      "Ref": "AWS::AccountId"
+                    }
+                  }
+              },
+              {
+                 "Action":"*",
+                 "Effect":"Deny",
+                 "Resource": {
+                   "Fn::Join" : [
+                      "",
+                      [
+                        "arn:aws:s3:::",
+                        { "Ref" : "S3BucketConfig" },
+                        "/*"
+                      ]
+                    ]
+                  },
+                  "Principal": "*",
+                  "Condition": {
+                    "Bool": {
+                      "aws:SecureTransport": "false"
+                    }
+                  }
+              }
+            ]
+          }
+         }
+        }
+    },
+    "Outputs": {
+        "S3BucketConfigMappingSystem": {
+            "Description": "The name of the bucket for lambdas, cfn templates and data",
+            "Value": {"Ref": "S3BucketConfig"},
+            "Export": {
+                "Name": "nvtaS3BucketConfig"
+            }
+        }
+    }
+}

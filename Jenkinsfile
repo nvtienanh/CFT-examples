@@ -24,7 +24,7 @@ pipeline {
         ACCOUNT_ID_STAGING  = '856190911244'
         ACCOUNT_ID_PROD     = '856190911244'
         DEPLOYER_ROLE       = 'nvta/deployment/role-nvta-deployer'
-        S3_BUCKET_URL_CONFIG      = "s3://s3-app-nvta-${params.DEPLOY_ENV}-config-ap-southeast-1"
+        S3_BUCKET_URL_CONFIG      = "s3://s3-app-nvta-${params.DEPLOY_ENV}-config-default-ap-southeast-1"
     }
 
     stages {
@@ -71,6 +71,29 @@ pipeline {
                    } else if ("${params.DEPLOY_ENV}" == 'prod') {
                        ACCOUNT_ID = env.ACCOUNT_ID_PROD
                    }
+               }
+           }
+        }
+
+        stage("STEP 2: Update/Deploy Default S3 Bucket") {
+           when {
+             expression {
+               currentBuild.result == null || currentBuild.result == 'SUCCESS'
+             }
+           }
+           steps {
+               withAWS(region: "${AWS_REGION}", role: "arn:aws:iam::${ACCOUNT_ID}:role/${DEPLOYER_ROLE}") {
+                   sh """
+                   set +x
+                   TEMPLATE_BODY="--template-body file://CloudFormationTemplates/Init.s3.buckets.cf.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
+                   sh create-or-update-stack.sh stack-nvta-${params.DEPLOY_ENV}-S3Buckets-Config-Default "\${TEMPLATE_BODY}"
+                   """
+
+                   sleep 5 // Waiting for AWS S3 bucket creation is completely finished
+
+                   sh """
+                   aws s3 cp --sse aws:kms CloudFormationTemplates/Init.s3.buckets.cf.json "${S3_BUCKET_URL_CONFIG}"
+                   """
                }
            }
         }
