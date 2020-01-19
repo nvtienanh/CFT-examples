@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 usage="Usage: $(basename "$0") stack-name [aws-cli-opts]
 
@@ -17,7 +17,7 @@ if [ -z "$1" ] || [ -z "$2" ]; then
   exit -1
 fi
 
-set -eu pipefail
+set -eu -o pipefail
 
 echo "Checking if stack exists ..."
 
