@@ -17,7 +17,7 @@ if [ -z "$1" ] || [ -z "$2" ]; then
   exit -1
 fi
 
-set -euxo pipefail
+set -eu pipefail
 
 echo "Checking if stack exists ..."
 
