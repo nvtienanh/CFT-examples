@@ -85,7 +85,7 @@ pipeline {
                withAWS(region: "${AWS_REGION}") {
                    sh """
                    set +x
-                   TEMPLATE_BODY="--template-body file://CFTs/base-resources.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
+                   TEMPLATE_BODY="--template-body file://CFTs/base-resources.json"
                    bash create-or-update-stack.sh stack-nvta-${params.DEPLOY_ENV}-base-resources-global "\${TEMPLATE_BODY}"
                    """
 
