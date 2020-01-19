@@ -84,9 +84,13 @@ pipeline {
            steps {
                withAWS(region: "${AWS_REGION}", credentials:'aws_nvtienanh') {
                    sh """
+                   chmod +x create-or-update-stack.sh
+                   """
+                   
+                   sh """
                    set +x
                    TEMPLATE_BODY="--template-body file://CFTs/base-resources.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
-                   sh create-or-update-stack.sh stack-nvta-${params.DEPLOY_ENV}-base-resources-global "\${TEMPLATE_BODY}"
+                   ./create-or-update-stack.sh stack-nvta-${params.DEPLOY_ENV}-base-resources-global "\${TEMPLATE_BODY}"
                    """
 
                 //    sleep 5 // Waiting for AWS S3 bucket creation is completely finished
