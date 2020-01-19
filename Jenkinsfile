@@ -82,7 +82,7 @@ pipeline {
              }
            }
            steps {
-               withAWS(region: "${AWS_REGION}", role: "arn:aws:iam::${ACCOUNT_ID}:role/${DEPLOYER_ROLE}") {
+               withAWS(profile:"${params.DEPLOY_ENV}", role: "arn:aws:iam::${ACCOUNT_ID}:role/${DEPLOYER_ROLE}") {
                    sh """
                    set +x
                    TEMPLATE_BODY="--template-body file://CloudFormationTemplates/Init.s3.buckets.cf.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
