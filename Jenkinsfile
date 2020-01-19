@@ -75,25 +75,25 @@ pipeline {
            }
         }
 
-        stage("STEP 2: Update/Deploy Default S3 Bucket") {
+        stage("STEP 2: Update/Deploy Base resources") {
            when {
              expression {
                currentBuild.result == null || currentBuild.result == 'SUCCESS'
              }
            }
            steps {
-               withAWS(region: "${AWS_REGION}", role: "arn:aws:iam::${ACCOUNT_ID}:role/${DEPLOYER_ROLE}") {
+               withAWS(region: "${AWS_REGION}") {
                    sh """
                    set +x
-                   TEMPLATE_BODY="--template-body file://CloudFormationTemplates/Init.s3.buckets.cf.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
-                   sh create-or-update-stack.sh stack-nvta-${params.DEPLOY_ENV}-S3Buckets-Config-Default "\${TEMPLATE_BODY}"
+                   TEMPLATE_BODY="--template-body file://CFTs/base-resources.json --parameters ParameterKey=StageName,ParameterValue=${params.DEPLOY_ENV}"
+                   sh create-or-update-stack.sh stack-nvta-${params.DEPLOY_ENV}-base-resources-global "\${TEMPLATE_BODY}"
                    """
 
-                   sleep 5 // Waiting for AWS S3 bucket creation is completely finished
+                //    sleep 5 // Waiting for AWS S3 bucket creation is completely finished
 
-                   sh """
-                   aws s3 cp --sse aws:kms CloudFormationTemplates/Init.s3.buckets.cf.json "${S3_BUCKET_URL_CONFIG}"
-                   """
+                //    sh """
+                //    aws s3 cp --sse aws:kms CFTs/Init.s3.buckets.cf.json "${S3_BUCKET_URL_CONFIG}"
+                //    """
                }
            }
         }

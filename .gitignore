@@ -1,5 +1,5 @@
-base-resources-global.json
-iam-deployment-global.json
-iam-users-nvta.json
+CFTs/base-resources-global.json
+CFTs/iam-deployment-global.json
+CFTs/iam-users-nvta.json
 *.sh
 *.properties
